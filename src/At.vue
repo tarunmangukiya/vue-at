@@ -85,7 +85,8 @@ export default {
       bindsValue: this.value != null,
       customsEmbedded: false,
       hasComposition: false,
-      atwho: null
+      atwho: null,
+      suggestionMode: false
     }
   },
   computed: {
@@ -216,7 +217,7 @@ export default {
 
         if (index > -1) {
           const chunk = text.slice(index + at.length)
-          const has = members.some(v => {
+          const has = members.find(v => {
             const name = itemName(v)
             return deleteMatch(name, chunk, suffix)
           })
@@ -228,6 +229,7 @@ export default {
               r.setStart(r.endContainer, index)
               r.deleteContents()
               applyRange(r)
+              this.$emit('remove', has)
               this.handleInput()
             }
           }
@@ -255,6 +257,10 @@ export default {
           this.closePanel()
           return
         }
+      }
+
+      if(this.atItems.indexOf(e.key) > -1) {
+        this.suggestionMode = true
       }
 
       // 为了兼容ie ie9~11 editable无input事件 只能靠keydown触发 textarea正常
@@ -315,7 +321,8 @@ export default {
           this.closePanel()
         } else {
           const { members, filterMatch, itemName } = this
-          if (!keep && chunk) { // fixme: should be consistent with AtTextarea.vue
+
+          if (!keep && chunk && this.suggestionMode) { // fixme: should be consistent with AtTextarea.vue
             this.$emit('at', chunk)
           }
           const matched = members.filter(v => {
@@ -473,6 +480,7 @@ export default {
       }
 
       this.$emit('insert', curItem)
+      this.suggestionMode = false
       this.handleInput()
     },
     htmlToElement (html) {
